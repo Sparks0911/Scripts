@@ -148,4 +148,42 @@ local function toggleESP(on)
                         box.Visible = true
                     else
                         box.Visible = false
+                    end
+                else
+                    box.Visible = false
+                end
+            end
+        end)
+    else
+        for _, box in pairs(espBoxes) do
+            box:Remove()
+        end
+        espBoxes = {}
+    end
+end
+
+espBtn.MouseButton1Click:Connect(function()
+    toggles.ESP = not toggles.ESP
+    espBtn.Text = "ESP: " .. (toggles.ESP and "ON" or "OFF")
+    toggleESP(toggles.ESP)
+end)
+
+-- WalkSpeed changer (optional, basic)
+local walkSpeedBtn = createToggle("WalkSpeed (16 default)", 230)
+walkSpeedBtn.MouseButton1Click:Connect(function()
+    if player.Character and player.Character:FindFirstChild("Humanoid") then
+        if walkSpeed == 16 then
+            walkSpeed = 50
+        else
+            walkSpeed = 16
+        end
+        player.Character.Humanoid.WalkSpeed = walkSpeed
+        walkSpeedBtn.Text = "WalkSpeed (" .. walkSpeed .. ")"
+    end
+end)
+
+-- Set initial WalkSpeed
+if player.Character and player.Character:FindFirstChild("Humanoid") then
+    player.Character.Humanoid.WalkSpeed = walkSpeed
+end
 
