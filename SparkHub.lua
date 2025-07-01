@@ -1,3 +1,5 @@
+--// SparkHub V2 - Clean, Toggleable, No Sounds, Fully Functional 
+--// By Sparks0911 + ChatGPT ❤️
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
