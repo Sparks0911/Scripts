@@ -1,4 +1,4 @@
--- SparkHub Ultimate by Sparks0911 v1.0
+-- SparkHub Ultimate by Sparks0911 v1.1
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -9,44 +9,38 @@ local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local camera = workspace.CurrentCamera
 
--- Cleanup old GUI
+-- Remove old GUI if exists
 local oldGui = playerGui:FindFirstChild("SparkHub")
 if oldGui then oldGui:Destroy() end
 
--- Variables
-local toggles = {
-    Fly = false,
-    Noclip = false,
-    ESP = false,
-    InfiniteJump = false,
-}
-
+-- State variables
+local toggles = {Fly=false, Noclip=false, ESP=false, InfiniteJump=false}
 local flySpeed = 50
-local walkspeed = 16
-local jumppower = 50
+local walkSpeed = 16
+local jumpPower = 50
 
 local espBoxes = {}
-local espConnection
-local playerAddedConnection
-local playerRemovingConnection
+local espConnections = {}
 
--- Create GUI container (initially invisible)
-local gui = Instance.new("ScreenGui", playerGui)
+-- Create GUI container (starts disabled)
+local gui = Instance.new("ScreenGui")
 gui.Name = "SparkHub"
 gui.Enabled = false
+gui.Parent = playerGui
 
 -- Main frame
-local frame = Instance.new("Frame", gui)
+local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 420, 0, 520)
 frame.Position = UDim2.new(0.5, -210, 0.5, -260)
-frame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 frame.BorderSizePixel = 0
 frame.AnchorPoint = Vector2.new(0.5, 0.5)
 frame.Active = true
 frame.Draggable = true
+frame.Parent = gui
 
 -- Title
-local title = Instance.new("TextLabel", frame)
+local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 60)
 title.BackgroundTransparency = 1
 title.Text = "⚡ SparkHub Ultimate ⚡"
@@ -54,18 +48,19 @@ title.Font = Enum.Font.FredokaOne
 title.TextSize = 36
 title.TextColor3 = Color3.fromRGB(0, 170, 255)
 title.TextStrokeTransparency = 0.4
+title.Parent = frame
 
--- Loading bar overlay
+-- Loading screen (over frame)
 local loadingFrame = Instance.new("Frame", gui)
-loadingFrame.Size = UDim2.new(0, 420, 0, 60)
-loadingFrame.Position = UDim2.new(0.5, -210, 0.5, -260)
-loadingFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-loadingFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+loadingFrame.Size = frame.Size
+loadingFrame.Position = frame.Position
+loadingFrame.AnchorPoint = frame.AnchorPoint
+loadingFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
 
 local loadingText = Instance.new("TextLabel", loadingFrame)
 loadingText.Size = UDim2.new(1, 0, 0, 30)
+loadingText.Position = UDim2.new(0, 0, 0, 10)
 loadingText.BackgroundTransparency = 1
-loadingText.Position = UDim2.new(0, 0, 0, 0)
 loadingText.Text = "Loading SparkHub... 0%"
 loadingText.Font = Enum.Font.GothamBold
 loadingText.TextSize = 20
@@ -73,7 +68,7 @@ loadingText.TextColor3 = Color3.fromRGB(170, 170, 255)
 
 local loadingBarBack = Instance.new("Frame", loadingFrame)
 loadingBarBack.Size = UDim2.new(1, -40, 0, 20)
-loadingBarBack.Position = UDim2.new(0, 20, 0, 35)
+loadingBarBack.Position = UDim2.new(0, 20, 0, 50)
 loadingBarBack.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
 loadingBarBack.BorderSizePixel = 0
 
@@ -83,8 +78,7 @@ loadingBarFill.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
 loadingBarFill.BorderSizePixel = 0
 
 local function tweenLoading(percent)
-    local goalSize = UDim2.new(percent, 0, 1, 0)
-    local tween = TweenService:Create(loadingBarFill, TweenInfo.new(0.3), {Size = goalSize})
+    local tween = TweenService:Create(loadingBarFill, TweenInfo.new(0.3), {Size = UDim2.new(percent, 0, 1, 0)})
     tween:Play()
     loadingText.Text = ("Loading SparkHub... %d%%"):format(percent * 100)
     tween.Completed:Wait()
@@ -102,11 +96,11 @@ spawn(function()
     gui.Enabled = true
 end)
 
--- Utility function to create toggle buttons
-local function createToggle(name, yPos)
+-- Helper: Create toggle button
+local function createToggle(name, y)
     local btn = Instance.new("TextButton", frame)
     btn.Size = UDim2.new(0, 180, 0, 40)
-    btn.Position = UDim2.new(0, 20, 0, yPos)
+    btn.Position = UDim2.new(0, 20, 0, y)
     btn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
     btn.TextColor3 = Color3.fromRGB(230, 230, 255)
     btn.Font = Enum.Font.GothamBold
@@ -116,11 +110,11 @@ local function createToggle(name, yPos)
     return btn
 end
 
--- Utility function to create sliders
-local function createSlider(name, yPos, minVal, maxVal, defaultVal)
+-- Helper: Create slider
+local function createSlider(name, y, minVal, maxVal, defaultVal)
     local sliderFrame = Instance.new("Frame", frame)
     sliderFrame.Size = UDim2.new(0, 180, 0, 40)
-    sliderFrame.Position = UDim2.new(0, 20, 0, yPos)
+    sliderFrame.Position = UDim2.new(0, 20, 0, y)
     sliderFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
     sliderFrame.BorderSizePixel = 0
     sliderFrame.ClipsDescendants = true
@@ -167,14 +161,14 @@ local function createSlider(name, yPos, minVal, maxVal, defaultVal)
             local val = math.floor(minVal + (maxVal - minVal) * percent)
             label.Text = name .. ": " .. val
             if name == "WalkSpeed" then
-                walkspeed = val
+                walkSpeed = val
                 if player.Character and player.Character:FindFirstChild("Humanoid") then
-                    player.Character.Humanoid.WalkSpeed = walkspeed
+                    player.Character.Humanoid.WalkSpeed = walkSpeed
                 end
             elseif name == "JumpPower" then
-                jumppower = val
+                jumpPower = val
                 if player.Character and player.Character:FindFirstChild("Humanoid") then
-                    player.Character.Humanoid.JumpPower = jumppower
+                    player.Character.Humanoid.JumpPower = jumpPower
                 end
             elseif name == "FlySpeed" then
                 flySpeed = val
@@ -185,7 +179,7 @@ local function createSlider(name, yPos, minVal, maxVal, defaultVal)
     return sliderFrame
 end
 
--- ESP functions
+-- ESP Functions
 local function createBoxForPlayer(p)
     local box = Drawing.new("Square")
     box.Color = Color3.fromRGB(0, 170, 255)
@@ -197,14 +191,12 @@ end
 
 local function toggleESP(on)
     if on then
-        -- Create boxes for all players except local player
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                 espBoxes[p] = createBoxForPlayer(p)
             end
         end
-
-        espConnection = RunService.RenderStepped:Connect(function()
+        espConnections.RenderStepped = RunService.RenderStepped:Connect(function()
             for p, box in pairs(espBoxes) do
                 if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character.Humanoid.Health > 0 then
                     local pos, onScreen = camera:WorldToViewportPoint(p.Character.HumanoidRootPart.Position)
@@ -212,7 +204,7 @@ local function toggleESP(on)
                         box.Visible = true
                         local size = 50 / pos.Z
                         box.Size = Vector2.new(size, size * 2)
-                        box.Position = Vector2.new(pos.X - size / 2, pos.Y - size)
+                        box.Position = Vector2.new(pos.X - size/2, pos.Y - size)
                     else
                         box.Visible = false
                     end
@@ -222,13 +214,13 @@ local function toggleESP(on)
             end
         end)
 
-        playerAddedConnection = Players.PlayerAdded:Connect(function(p)
+        espConnections.PlayerAdded = Players.PlayerAdded:Connect(function(p)
             if p ~= player then
                 espBoxes[p] = createBoxForPlayer(p)
             end
         end)
 
-        playerRemovingConnection = Players.PlayerRemoving:Connect(function(p)
+        espConnections.PlayerRemoving = Players.PlayerRemoving:Connect(function(p)
             if espBoxes[p] then
                 espBoxes[p]:Remove()
                 espBoxes[p] = nil
@@ -236,9 +228,9 @@ local function toggleESP(on)
         end)
 
     else
-        if espConnection then espConnection:Disconnect() end
-        if playerAddedConnection then playerAddedConnection:Disconnect() end
-        if playerRemovingConnection then playerRemovingConnection:Disconnect() end
+        if espConnections.RenderStepped then espConnections.RenderStepped:Disconnect() end
+        if espConnections.PlayerAdded then espConnections.PlayerAdded:Disconnect() end
+        if espConnections.PlayerRemoving then espConnections.PlayerRemoving:Disconnect() end
         for _, box in pairs(espBoxes) do
             box:Remove()
         end
@@ -246,20 +238,19 @@ local function toggleESP(on)
     end
 end
 
--- Toggles and Sliders Creation
+-- Create toggles and sliders
 local flyBtn = createToggle("Fly", 80)
 local noclipBtn = createToggle("Noclip", 130)
 local espBtn = createToggle("ESP", 180)
 local infJumpBtn = createToggle("InfiniteJump", 230)
 
-local walkspeedSlider = createSlider("WalkSpeed", 280, 16, 150, walkspeed)
-local jumpPowerSlider = createSlider("JumpPower", 320, 50, 200, jumppower)
+local walkSpeedSlider = createSlider("WalkSpeed", 280, 16, 150, walkSpeed)
+local jumpPowerSlider = createSlider("JumpPower", 320, 50, 200, jumpPower)
 local flySpeedSlider = createSlider("FlySpeed", 360, 50, 300, flySpeed)
 
--- Fly functionality
+-- Fly mechanics
 local flying = false
-local bv
-local bg
+local bv, bg
 
 local function startFly()
     local char = player.Character
@@ -272,11 +263,11 @@ local function startFly()
     humanoid.PlatformStand = true
 
     bv = Instance.new("BodyVelocity", hrp)
-    bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+    bv.MaxForce = Vector3.new(1e5,1e5,1e5)
     bv.Velocity = Vector3.new()
 
     bg = Instance.new("BodyGyro", hrp)
-    bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
+    bg.MaxTorque = Vector3.new(1e5,1e5,1e5)
     bg.CFrame = hrp.CFrame
 end
 
@@ -288,7 +279,6 @@ local function stopFly()
     if humanoid then humanoid.PlatformStand = false end
 end
 
--- Connections
 flyBtn.MouseButton1Click:Connect(function()
     toggles.Fly = not toggles.Fly
     flyBtn.Text = "Fly: " .. (toggles.Fly and "ON" or "OFF")
@@ -311,20 +301,19 @@ infJumpBtn.MouseButton1Click:Connect(function()
     infJumpBtn.Text = "InfiniteJump: " .. (toggles.InfiniteJump and "ON" or "OFF")
 end)
 
--- Apply WalkSpeed & JumpPower on respawn and start
+-- Apply WalkSpeed & JumpPower on respawn & start
 player.CharacterAdded:Connect(function(char)
     local humanoid = char:WaitForChild("Humanoid")
-    humanoid.WalkSpeed = walkspeed
-    humanoid.JumpPower = jumppower
+    humanoid.WalkSpeed = walkSpeed
+    humanoid.JumpPower = jumpPower
 end)
 
 if player.Character and player.Character:FindFirstChild("Humanoid") then
-    local humanoid = player.Character.Humanoid
-    humanoid.WalkSpeed = walkspeed
-    humanoid.JumpPower = jumppower
+    player.Character.Humanoid.WalkSpeed = walkSpeed
+    player.Character.Humanoid.JumpPower = jumpPower
 end
 
--- Infinite jump handler
+-- Infinite Jump handler
 UserInputService.JumpRequest:Connect(function()
     if toggles.InfiniteJump and player.Character and player.Character:FindFirstChild("Humanoid") then
         player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
@@ -367,3 +356,4 @@ RunService.RenderStepped:Connect(function()
         bg.CFrame = camera.CFrame
     end
 end)
+
