@@ -20,7 +20,6 @@ local Window = Rayfield:CreateWindow({
     ToggleUIKeybind = Enum.KeyCode.K,
 })
 
--- Variables
 local walkSpeed = 16
 local jumpPower = 50
 local infiniteJump = false
@@ -42,7 +41,6 @@ local originalLighting = {
     OutdoorAmbient = Lighting.OutdoorAmbient,
 }
 
--- ======= PLAYER TAB =======
 local PlayerTab = Window:CreateTab("Player")
 
 PlayerTab:CreateSlider({
@@ -209,7 +207,6 @@ VisualsTab:CreateToggle({
     end,
 })
 
--- Auto reapply ESP on character respawn
 local function onCharacterAdded(character)
     if ESPEnabled then
         task.wait(1)
@@ -232,7 +229,6 @@ end)
 
 Players.PlayerRemoving:Connect(RemoveESP)
 
--- ======= COMBAT TAB =======
 local CombatTab = Window:CreateTab("Combat")
 
 CombatTab:CreateToggle({
@@ -276,7 +272,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ======= MAIN LOOP =======
 RunService.Heartbeat:Connect(function()
     local character = LocalPlayer.Character
     local humanoid = character and character:FindFirstChildOfClass("Humanoid")
@@ -287,7 +282,6 @@ RunService.Heartbeat:Connect(function()
         humanoid.JumpPower = jumpPower
     end
 
-    -- Fixed Auto Heal to instantly set max health without going below max
     if autoHealEnabled and humanoid and humanoid.Health < humanoid.MaxHealth then
         humanoid.Health = humanoid.MaxHealth
     end
@@ -341,7 +335,6 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- ======= EMERGENCY TAB =======
 local EmergencyTab = Window:CreateTab("🚨 Emergency 🚨")
 
 EmergencyTab:CreateButton({
