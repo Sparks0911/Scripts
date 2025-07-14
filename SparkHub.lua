@@ -1,5 +1,3 @@
--- SparkHub v4 - Full Working Script (No Anti-Ragdoll, Fixed Freeze/Noclip, No Funny Button)
--- Rayfield UI by Sirius (https://sirius.menu/rayfield)
 
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local Players = game:GetService("Players")
