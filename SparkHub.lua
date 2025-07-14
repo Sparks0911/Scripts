@@ -1,4 +1,3 @@
-
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -288,8 +287,9 @@ RunService.Heartbeat:Connect(function()
         humanoid.JumpPower = jumpPower
     end
 
+    -- Fixed Auto Heal to instantly set max health without going below max
     if autoHealEnabled and humanoid and humanoid.Health < humanoid.MaxHealth then
-        humanoid.Health = math.min(humanoid.Health + 1, humanoid.MaxHealth)
+        humanoid.Health = humanoid.MaxHealth
     end
 
     if flyEnabled and bodyVelocity and bodyGyro and hrp then
